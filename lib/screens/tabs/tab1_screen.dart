@@ -10,20 +10,42 @@ class Tab1Screen extends StatefulWidget {
 }
 
 class _Tab1ScreenState extends State<Tab1Screen> {
-  int _counter = 35;
-  bool _active = true;
+  int _state = 0; // 0 = Idle, 1 = Ready, 2 = TAP NOW!
+  int _reactionMs = 214;
+
+  void _tapButton() {
+    setState(() {
+      if (_state == 0) {
+        _state = 1;
+      } else if (_state == 1) {
+        _state = 2;
+      } else {
+        _reactionMs = 195 + (_reactionMs % 30);
+        _state = 0;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    Color bg = AppTheme.card;
+    String prompt = 'TAP TO BEGIN TEST';
+    if (_state == 1) {
+      bg = Colors.redAccent.shade700;
+      prompt = 'WAIT FOR GREEN...';
+    } else if (_state == 2) {
+      bg = Colors.green.shade600;
+      prompt = 'TAP NOW!';
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MindQuest • MathBlitz', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text('Reaction Speed Arena', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: AppTheme.surface,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.stars_rounded, color: AppTheme.primary),
-            tooltip: 'Special Registration Offer',
             onPressed: () => RoutingService.openRegistrationUrl(),
           ),
         ],
@@ -31,92 +53,45 @@ class _Tab1ScreenState extends State<Tab1Screen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.card,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.35)),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'MathBlitz Dashboard',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-                      ),
-                      Icon(Icons.calculate, color: AppTheme.primary, size: 28),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '1,040',
-                    style: const TextStyle(fontSize: 44, fontWeight: FontWeight.w900, color: AppTheme.primary),
-                  ),
-                  const Text('Speed Arithmetic', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () => setState(() => _counter += 5),
-                        icon: const Icon(Icons.bolt),
-                        label: Text('Play Blitz (\$_counter)'),
-                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary, foregroundColor: Colors.black),
-                      ),
-                      const SizedBox(width: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => setState(() => _active = !_active),
-                        icon: Icon(_active ? Icons.check_circle : Icons.pause),
-                        label: Text(_active ? 'Active' : 'Paused'),
-                        style: OutlinedButton.styleFrom(foregroundColor: AppTheme.primary),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              color: AppTheme.surface,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
-                  child: const Icon(Icons.emoji_events, color: AppTheme.primary),
-                ),
-                title: const Text('Exclusive Registration Offer', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                subtitle: const Text('Access exclusive features and personalized rewards', style: TextStyle(fontSize: 12)),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppTheme.primary),
-                onTap: () => RoutingService.openRegistrationUrl(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Activity Stream & Log', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const SizedBox(height: 12),
-                  for (int i = 1; i <= 3; i++) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('MindQuest Log #$i', style: const TextStyle(color: AppTheme.textSecondary)),
-                        Text('Synced ${i * 10}m ago', style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    if (i < 3) const Divider(height: 16, color: Colors.white12),
+            GestureDetector(
+              onTap: _tapButton,
+              child: Container(
+                width: double.infinity,
+                height: 240,
+                decoration: BoxDecoration(
+                  color: bg,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(color: bg.withValues(alpha: 0.4), blurRadius: 20, offset: const Offset(0, 8)),
                   ],
+                ),
+                child: Center(
+                  child: Text(prompt, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(color: AppTheme.card, borderRadius: BorderRadius.circular(16)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                    children: [
+                      const Text('LAST REACTION', style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+                      const SizedBox(height: 4),
+                      Text('$_reactionMs ms', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      const Text('RATING', style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+                      const SizedBox(height: 4),
+                      Text(_reactionMs < 200 ? 'Pro Gamer' : 'Human Reflex', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ],
+                  ),
                 ],
               ),
             ),
